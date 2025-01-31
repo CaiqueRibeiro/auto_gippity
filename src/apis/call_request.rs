@@ -1,4 +1,4 @@
-use crate::models::general::llm::{ChatCompletion, Message};
+use crate::models::general::llm::{APIResponse, ChatCompletion, Message};
 use dotenv::dotenv;
 use std::env;
 
@@ -49,17 +49,19 @@ pub async fn call_gpt(messages: Vec<Message>) -> Result<String, Box<dyn std::err
         temperature: 0.1,
     };
 
-    // Troubleshooting
-    let res_raw = client
+    // Extracts API response
+    let res: APIResponse = client
         .post(url)
         .json(&chat_completion)
         .send()
         .await
-        .unwrap();
+        .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?
+        .json()
+        .await
+        .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?;
 
-    dbg!(res_raw.text().await.unwrap());
-
-    Ok("Ok".to_string())
+    // send response
+    Ok(res.choices[0].message.content.clone())
 }
 
 #[cfg(test)]
@@ -75,6 +77,15 @@ mod tests {
 
         let messages = vec![message];
 
-        call_gpt(messages).await;
+        let res: Result<String, Box<dyn std::error::Error + Send>> = call_gpt(messages).await;
+        match res {
+            Ok(res_str) => {
+                dbg!(res_str);
+                assert!(true);
+            }
+            Err(_) => {
+                assert!(false);
+            }
+        }
     }
 }
