@@ -8,7 +8,7 @@ use reqwest::{
 };
 
 // Calls Large Language Model (i.e. GTP-4)
-pub async fn call_gpt(messages: Vec<Message>) {
+pub async fn call_gpt(messages: Vec<Message>) -> Result<String, Box<dyn std::error::Error + Send>> {
     dotenv().ok();
 
     // Extracts API Key infromations
@@ -25,17 +25,22 @@ pub async fn call_gpt(messages: Vec<Message>) {
     // Creates API key header
     headers.insert(
         "authorization",
-        HeaderValue::from_str(&format!("Bearer {}", api_key)).unwrap(),
+        HeaderValue::from_str(&format!("Bearer {}", api_key))
+            .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?,
     );
 
     // Creates OpenAI Org header
     headers.insert(
         "OpenAI-Organization",
-        HeaderValue::from_str(api_org.as_str()).unwrap(),
+        HeaderValue::from_str(api_org.as_str())
+            .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?,
     );
 
     // Creates client
-    let client = Client::builder().default_headers(headers).build().unwrap();
+    let client = Client::builder()
+        .default_headers(headers)
+        .build()
+        .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?;
 
     // Create chat completion
     let chat_completion: ChatCompletion = ChatCompletion {
@@ -53,6 +58,8 @@ pub async fn call_gpt(messages: Vec<Message>) {
         .unwrap();
 
     dbg!(res_raw.text().await.unwrap());
+
+    Ok("Ok".to_string())
 }
 
 #[cfg(test)]
