@@ -1,7 +1,6 @@
-use crate::{
-    apis::call_request::call_gpt,
-    models::general::llm::{self, Message},
-};
+use serde::de::DeserializeOwned;
+
+use crate::{apis::call_request::call_gpt, models::general::llm::Message};
 
 use super::command_line::PrintCommand;
 
@@ -51,6 +50,22 @@ pub async fn ai_task_request(
     };
 
     return llm_response;
+}
+
+// Performs call to LLM GPT - Decoded
+pub async fn ai_task_request_decoded<T: DeserializeOwned>(
+    msg_context: String,
+    agent_position: &str,
+    agent_operation: &str,
+    function_pass: for<'a> fn(&'a str) -> &'static str,
+) -> T {
+    let llm_response: String =
+        ai_task_request(msg_context, agent_position, agent_operation, function_pass).await;
+
+    let decoded_response: T = serde_json::from_str(llm_response.as_str())
+        .expect("Failed to decode AI response from serde_json");
+
+    return decoded_response;
 }
 
 #[cfg(test)]
