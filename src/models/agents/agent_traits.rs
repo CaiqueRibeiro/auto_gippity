@@ -23,7 +23,7 @@ pub struct ProjectScope {
 pub struct FactSheet {
     pub project_description: String,
     pub project_scope: Option<ProjectScope>,
-    pub external_url: Option<Vec<String>>,
+    pub external_urls: Option<Vec<String>>,
     pub backend_code: Option<String>,
     pub api_endpoint_schema: Option<Vec<RouteObject>>,
 }
